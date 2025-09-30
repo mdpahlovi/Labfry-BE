@@ -140,7 +140,7 @@ export class AuthService {
     async signupComplete(signupCompleteDto: SignupComplete) {
         const { email } = signupCompleteDto;
 
-        const verifyCode = await this.prismaService.code.findUnique({
+        const code = await this.prismaService.code.findUnique({
             where: {
                 email_purpose: {
                     email,
@@ -149,7 +149,7 @@ export class AuthService {
             },
         });
 
-        if (!verifyCode || verifyCode.consumedAt) {
+        if (!code || code.consumedAt) {
             throw new BadRequestException('Invalid reset code');
         }
 
@@ -165,7 +165,7 @@ export class AuthService {
 
             await tx.code.delete({
                 where: {
-                    id: verifyCode.id,
+                    id: code.id,
                 },
             });
 
@@ -211,7 +211,7 @@ export class AuthService {
     async resetPassword(resetPasswordDto: ResetPasswordDto) {
         const { email, password } = resetPasswordDto;
 
-        const resetCode = await this.prismaService.code.findUnique({
+        const code = await this.prismaService.code.findUnique({
             where: {
                 email_purpose: {
                     email,
@@ -220,7 +220,7 @@ export class AuthService {
             },
         });
 
-        if (!resetCode || resetCode.consumedAt) {
+        if (!code || code.consumedAt) {
             throw new BadRequestException('Invalid reset code');
         }
 
@@ -236,7 +236,7 @@ export class AuthService {
 
             await tx.code.delete({
                 where: {
-                    id: resetCode.id,
+                    id: code.id,
                 },
             });
         });

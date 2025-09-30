@@ -25,6 +25,6 @@ export class JwtService {
             expiresIn: '7d',
         });
 
-        return { payload, accToken, refToken };
+        return { user: payload, accToken, refToken };
     }
 }
