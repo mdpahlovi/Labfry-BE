@@ -37,8 +37,18 @@ export class AuthService {
                 create: { firstName, lastName, email, password: hashedPassword, role },
             });
 
-            const code = await tx.code.create({
-                data: {
+            const code = await tx.code.upsert({
+                where: {
+                    email_purpose: {
+                        email,
+                        purpose: 'VERIFY_EMAIL',
+                    },
+                },
+                update: {
+                    code: GenerateCode(),
+                    expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+                },
+                create: {
                     userId: user.id,
                     email,
                     code: GenerateCode(),
@@ -149,31 +159,28 @@ export class AuthService {
             },
         });
 
-        if (!code || code.consumedAt) {
-            throw new BadRequestException('Invalid reset code');
+        if (!code || !code.consumedAt) {
+            throw new BadRequestException('Please verify your email first');
         }
 
-        const user = await this.prismaService.$transaction(async (tx) => {
-            const user = await tx.user.update({
-                where: {
-                    email,
-                },
-                data: {
-                    verified: true,
-                },
-            });
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                email,
+            },
+        });
 
-            await tx.code.delete({
-                where: {
-                    id: code.id,
-                },
-            });
+        if (!user) {
+            throw new BadRequestException('User not found!');
+        }
 
-            return user;
+        await this.prismaService.code.delete({
+            where: {
+                id: code.id,
+            },
         });
 
         return {
-            message: 'User signed up successfully',
+            message: 'User signed in successfully',
             data: this.jwtService.generateToken(user),
         };
     }
@@ -191,8 +198,18 @@ export class AuthService {
             throw new BadRequestException('User not found');
         }
 
-        const code = await this.prismaService.code.create({
-            data: {
+        const code = await this.prismaService.code.upsert({
+            where: {
+                email_purpose: {
+                    email,
+                    purpose: 'PASSWORD_RESET',
+                },
+            },
+            update: {
+                code: GenerateCode(),
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+            },
+            create: {
                 userId: user.id,
                 email,
                 code: GenerateCode(),
@@ -220,8 +237,18 @@ export class AuthService {
             },
         });
 
-        if (!code || code.consumedAt) {
-            throw new BadRequestException('Invalid reset code');
+        if (!code || !code.consumedAt) {
+            throw new BadRequestException('Please verify your email first!');
+        }
+
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                email,
+            },
+        });
+
+        if (!user) {
+            throw new BadRequestException('User not found!');
         }
 
         await this.prismaService.$transaction(async (tx) => {
