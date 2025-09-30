@@ -24,19 +24,17 @@ export class AuthService {
             },
         });
 
-        if (user) {
+        if (user && user.verified) {
             throw new BadRequestException('User already exists');
         }
 
-        await this.prismaService.$transaction(async (tx) => {
-            const user = await tx.user.create({
-                data: {
-                    firstName,
-                    lastName,
-                    email,
-                    password: await this.bcryptService.hashPassword(password),
-                    role,
-                },
+        const hashedPassword = await this.bcryptService.hashPassword(password);
+
+        const code = await this.prismaService.$transaction(async (tx) => {
+            const user = await tx.user.upsert({
+                where: { email },
+                update: { firstName, lastName, password: hashedPassword, role },
+                create: { firstName, lastName, email, password: hashedPassword, role },
             });
 
             const code = await tx.code.create({
@@ -49,8 +47,10 @@ export class AuthService {
                 },
             });
 
-            await this.emailService.verifyEmail({ email, code: code.code });
+            return code;
         });
+
+        await this.emailService.verifyEmail({ email, code: code.code });
 
         return {
             message: 'User created successfully',
@@ -75,7 +75,7 @@ export class AuthService {
         }
 
         if (!user.verified) {
-            throw new BadRequestException('Please verify your email before signing in');
+            throw new BadRequestException('Please verify your email before login');
         }
 
         return {
@@ -108,13 +108,28 @@ export class AuthService {
             throw new BadRequestException('Verification code has expired');
         }
 
-        await this.prismaService.code.update({
-            where: {
-                id: verifyCode.id,
-            },
-            data: {
-                consumedAt: new Date(),
-            },
+        if (verifyCode.consumedAt) {
+            throw new BadRequestException('Verification code has already been used');
+        }
+
+        await this.prismaService.$transaction(async (tx) => {
+            await tx.user.update({
+                where: {
+                    email,
+                },
+                data: {
+                    verified: true,
+                },
+            });
+
+            await tx.code.update({
+                where: {
+                    id: verifyCode.id,
+                },
+                data: {
+                    consumedAt: new Date(),
+                },
+            });
         });
 
         return {
