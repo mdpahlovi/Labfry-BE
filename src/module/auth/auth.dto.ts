@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { CodePurpose, UserRole } from '@prisma/client';
 
 export class SignupDto {
     firstName: string;
@@ -13,11 +13,20 @@ export class SigninDto {
     password: string;
 }
 
+export class SignupComplete {
+    email: string;
+}
 export class VerifyEmailDto {
     email: string;
     code: string;
+    purpose: CodePurpose;
+}
+
+export class ForgotPasswordDto {
+    email: string;
 }
 
 export class ResetPasswordDto {
+    email: string;
     password: string;
 }

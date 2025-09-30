@@ -52,5 +52,6 @@ model Code {
   expiresAt  DateTime    @map("expires_at")
   consumedAt DateTime?   @map("consumed_at")
 
+  @@unique([email, purpose])
   @@map("codes")
 }

@@ -17,155 +17,120 @@ export class EmailService {
         });
     }
 
-    async verifyEmail({ email, verifyToken }: { email: string; verifyToken: string }) {
-        const verifyUrl = `${this.config.get('origin')}/verify/${verifyToken}`;
+    async verifyEmail({ email, code }: { email: string; code: string }) {
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header -->
+                    <div style="background-color: #EE3638; color: #ffffff; padding: 30px; text-align: center;">
+                        <h1 style="margin: 0; font-size: 24px;">Verify Your Email</h1>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div style="padding: 40px; color: #333333;">
+                        <h2 style="color: #EE3638; margin-top: 0;">Welcome to LabFry!</h2>
+                        <p style="line-height: 1.6;">Thank you for signing up. Please verify your email address using the code below:</p>
+                        
+                        <!-- Code Box -->
+                        <div style="background-color: #f8f9fa; border: 2px dashed #EE3638; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+                            <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #EE3638; font-family: 'Courier New', monospace;">
+                                ${code}
+                            </div>
+                        </div>
+                        
+                        <p style="line-height: 1.6;">Enter this code on the verification page to activate your account.</p>
+                        
+                        <!-- Security Notice -->
+                        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+                            <strong>⚠️ Security Notice:</strong> If you didn't create an account, please ignore this email.
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #666666; font-size: 14px;">
+                        <p style="margin: 5px 0;">This is an automated message, please do not reply to this email.</p>
+                        <p style="margin: 5px 0;">&copy; 2025 LabFry. All rights reserved.</p>
+                    </div>
+                    
+                </div>
+            </body>
+            </html>
+        `;
 
         return await this.transporter.sendMail({
-            from: 'Clicklio <mdpahlovi07@gmail.com>',
+            from: 'LabFry <mdpahlovi.se@gmail.com>',
             to: [email],
-            subject: 'Verify Your Clicklio Account',
-            html: `
-            <!doctype html>
-            <html lang="en">
-                <head>
-                    <meta charset="UTF-8" />
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                    <title>Verify Your Clicklio Account</title>
-                    <style>
-                        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+            subject: 'Verify Your Email - LabFry',
+            html: html,
+        });
+    }
 
-                        body {
-                            margin: 0;
-                            padding: 0;
-                            font-family: "Inter", Arial, sans-serif;
-                            background-color: #f4f4f4;
-                        }
-                        .email-container {
-                            max-width: 600px;
-                            margin: 0 auto;
-                            background-color: #ffffff;
-                        }
-                        .header {
-                            background-color: #4882ed;
-                            padding: 30px 20px;
-                            text-align: center;
-                        }
-                        .logo {
-                            font-size: 32px;
-                            font-weight: bold;
-                            color: #ffffff;
-                            text-decoration: none;
-                            letter-spacing: 1px;
-                        }
-                        .content {
-                            padding: 40px 30px;
-                        }
-                        .greeting {
-                            font-size: 24px;
-                            color: #333333;
-                            margin-bottom: 20px;
-                            font-weight: 600;
-                        }
-                        .message {
-                            font-size: 16px;
-                            color: #666666;
-                            line-height: 1.6;
-                            margin-bottom: 30px;
-                        }
-                        .verify-button {
-                            display: inline-block;
-                            background-color: #4882ed;
-                            color: #ffffff !important;
-                            text-decoration: none;
-                            padding: 6px 32px;
-                            border-radius: 99px;
-                            font-size: 14px;
-                            font-weight: bold;
-                            line-height: 24px;
-                            text-align: center;
-                            transition: background-color 0.3s ease;
-                        }
-                        .verify-button:hover {
-                            background-color: #3a6bc7;
-                        }
-                        .alternative-text {
-                            font-size: 14px;
-                            color: #888888;
-                            margin-top: 30px;
-                            padding-top: 20px;
-                            border-top: 1px solid #eeeeee;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <table
-                        role="presentation"
-                        width="100%"
-                        cellpadding="0"
-                        cellspacing="0"
-                        border="0"
-                        style="background-color: #f4f4f4; padding: 20px 0"
-                    >
-                        <tr>
-                            <td align="center">
-                                <table class="email-container" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0">
-                                    <!-- Header -->
-                                    <tr>
-                                        <td class="header">
-                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                                                <tr>
-                                                    <td align="center">
-                                                        <a href="#" class="logo">Clicklio</a>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Main Content -->
-                                    <tr>
-                                        <td class="content">
-                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                                                <tr>
-                                                    <td>
-                                                        <div class="greeting">Welcome to Clicklio! 🎨</div>
-                                                        <div class="message">
-                                                            Thank you for signing up for Clicklio, your new virtual collaborative whiteboard platform!
-                                                            We're excited to have you join our creative community.
-                                                            <br /><br />
-                                                            To complete your registration and start collaborating on amazing projects, please verify
-                                                            your email address by clicking the button below:
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td align="center" style="padding: 20px 0">
-                                                        <a href="${verifyUrl}" class="verify-button"> Verify Email Address </a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <div class="alternative-text">
-                                                            If the button above doesn't work, copy and paste the following link into your browser:
-                                                            <br />
-                                                            <span style="color: #4882ed; word-break: break-all">${verifyUrl}</span>
-                                                            <br /><br />
-                                                            This verification link will expire in 1 hour for security reasons.
-                                                            <br /><br />
-                                                            If you didn't create an account with Clicklio, you can safely ignore this email.
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                    </table>
-                </body>
+    async resetPassword({ email, code }: { email: string; code: string }) {
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header -->
+                    <div style="background-color: #EE3638; color: #ffffff; padding: 30px; text-align: center;">
+                        <h1 style="margin: 0; font-size: 24px;">Reset Your Password</h1>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div style="padding: 40px; color: #333333;">
+                        <h2 style="color: #EE3638; margin-top: 0;">Password Reset Request</h2>
+                        <p style="line-height: 1.6;">We received a request to reset your password. Use the verification code below to proceed:</p>
+                        
+                        <!-- Code Box -->
+                        <div style="background-color: #f8f9fa; border: 2px dashed #EE3638; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+                            <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #EE3638; font-family: 'Courier New', monospace;">
+                                ${code}
+                            </div>
+                        </div>
+                        
+                        <p style="line-height: 1.6;">Enter this code on the password reset page to create a new password.</p>
+                        
+                        <!-- Security Notice -->
+                        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+                            <strong>⚠️ Security Notice:</strong> If you didn't request a password reset, your account may be at risk. Please secure your account immediately.
+                        </div>
+                        
+                        <p style="margin-top: 20px; line-height: 1.6;"><strong>For your security:</strong></p>
+                        <ul style="line-height: 1.8;">
+                            <li>Never share this code with anyone</li>
+                            <li>Our team will never ask for this code</li>
+                            <li>This code expires in 15 minutes</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #666666; font-size: 14px;">
+                        <p style="margin: 5px 0;">This is an automated message, please do not reply to this email.</p>
+                        <p style="margin: 5px 0;">&copy; 2025 LabFry. All rights reserved.</p>
+                    </div>
+                    
+                </div>
+            </body>
             </html>
-            `,
+        `;
+
+        return await this.transporter.sendMail({
+            from: 'LabFry <mdpahlovi.se@gmail.com>',
+            to: [email],
+            subject: 'Reset Your Password - LabFry',
+            html: html,
         });
     }
 }
