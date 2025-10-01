@@ -4,7 +4,7 @@ import { EmailService } from 'src/common/email.service';
 import { JwtService } from 'src/common/jwt.service';
 import { PrismaService } from 'src/common/prisma.service';
 import { GenerateCode } from 'src/utils/utils';
-import { ForgotPasswordDto, ResetPasswordDto, SigninDto, SignupComplete, SignupDto, VerifyEmailDto } from './auth.dto';
+import { ForgotPasswordDto, ResendCodeDto, ResetPasswordDto, SigninDto, SignupComplete, SignupDto, VerifyEmailDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -271,5 +271,59 @@ export class AuthService {
         return {
             message: 'Password reset successfully',
         };
+    }
+
+    async resendCode(resendCodeDto: ResendCodeDto) {
+        const { email, purpose } = resendCodeDto;
+
+        const user = await this.prismaService.user.findUnique({
+            where: {
+                email,
+            },
+        });
+
+        if (!user) {
+            throw new BadRequestException('User not found!');
+        }
+
+        const code = await this.prismaService.code.findUnique({
+            where: {
+                email_purpose: {
+                    email,
+                    purpose,
+                },
+            },
+        });
+
+        if (!code) {
+            throw new BadRequestException('Verification code not found!');
+        }
+
+        await this.prismaService.code.update({
+            where: {
+                email_purpose: {
+                    email,
+                    purpose,
+                },
+            },
+            data: {
+                code: GenerateCode(),
+                expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+            },
+        });
+
+        if (purpose === 'VERIFY_EMAIL') {
+            await this.emailService.verifyEmail({ email, code: code.code });
+
+            return {
+                message: 'Verification code resent successfully',
+            };
+        } else if (purpose === 'PASSWORD_RESET') {
+            await this.emailService.resetPassword({ email, code: code.code });
+
+            return {
+                message: 'Password reset email resent successfully',
+            };
+        }
     }
 }

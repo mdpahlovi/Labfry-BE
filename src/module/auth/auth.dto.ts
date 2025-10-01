@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { CodePurpose, UserRole } from '@prisma/client';
 import { IsNotEmpty, IsString } from 'class-validator';
 
@@ -67,4 +66,14 @@ export class ResetPasswordDto {
     @IsString()
     @IsNotEmpty()
     password: string;
+}
+
+export class ResendCodeDto {
+    @IsString()
+    @IsNotEmpty()
+    email: string;
+
+    @IsString()
+    @IsNotEmpty()
+    purpose: CodePurpose;
 }
